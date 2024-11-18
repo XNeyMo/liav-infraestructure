@@ -1,0 +1,75 @@
+---
+- name: App server configuration
+  hosts: app_server
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install nginx and python3-venv
+      apt:
+        name: 
+          - python3-venv
+          - nginx
+        state: present
+
+    - name: Make sure Nginx service is running
+      systemd:
+        state: started
+        name: nginx
+        
+    - name: Sets Nginx conf file
+      template:
+        src: "nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/app.conf"
+
+    - name: Enables new site
+      file:
+        src: "/etc/nginx/sites-available/app.conf"
+        dest: "/etc/nginx/sites-enabled/app.conf"
+        state: link
+
+    - name: Removes "default" site
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+        
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+
+    - name: Clone repository
+      git:
+        repo: https://github.com/MichaelTaboada2003/liav-backend
+        dest: /srv/app
+
+    - name: Copiar archivo .env
+      copy:
+        src: .env
+        dest: /srv/app/.env
+
+    - name: Create virtual environment
+      command: python3 -m venv venv
+      args:
+        chdir: /srv/app
+
+    - name: Activate virtual environment
+      ansible.builtin.shell: |
+        . /srv/app/venv/bin/activate
+      args:
+        chdir: /srv/app
+        executable: /bin/bash
+
+    - name: Install requeriments
+      pip:
+        requirements: /srv/app/requeriments.txt
+        virtualenv: /srv/app/venv
+
+    - name: Run server on background
+      ansible.builtin.shell: |
+        . /srv/app/venv/bin/activate && uvicorn app:app --reload --host 0.0.0.0 --port 8000 &
+      args:
+        chdir: /srv/app
+
