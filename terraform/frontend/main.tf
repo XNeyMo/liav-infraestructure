@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "main" {
     cached_methods         = ["HEAD", "GET"]
     cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
     target_origin_id       =  aws_s3_bucket.main.bucket_regional_domain_name
-    viewer_protocol_policy = "http-and-https" 
+    viewer_protocol_policy = "redirect-to-https" 
   }
 
   origin {

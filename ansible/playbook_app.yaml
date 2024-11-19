@@ -69,7 +69,7 @@
 
     - name: Run server on background
       ansible.builtin.shell: |
-        . /srv/app/venv/bin/activate && uvicorn app:app --reload --host 0.0.0.0 --port 8000 &
+        . /srv/app/venv/bin/activate && uvicorn app:app --reload --host 0.0.0.0 --port 8000 --proxy-headers &
       args:
         chdir: /srv/app
 
